@@ -1,6 +1,7 @@
 services:
   - type: web
     name: intuitivex-api
+    plan: free
     env: python
     rootDir: Tarefa4_API
     buildCommand: |
