@@ -1,0 +1,43 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+.env/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# PDFs baixados (gerados pela Tarefa 1)
+Tarefa1_WebScraping/arquivos_pdf/
+Tarefa1_WebScraping/arquivos_pdf.zip
+
+# CSVs gerados (Tarefa 2)
+Tarefa2_TransformacaoDados/*.csv
+Tarefa2_TransformacaoDados/Teste_*.zip
+
+# Dados baixados (Tarefa 3)
+Tarefa3_BancoDados/data/*.csv
+!Tarefa3_BancoDados/data/.gitkeep
+
+# Node modules (Tarefa 4)
+Tarefa4_API/frontend/node_modules/
+Tarefa4_API/frontend/dist/
+
+# CSV de dados (Tarefa 4)
+Tarefa4_API/backend/Relatorio_cadop.csv
+
