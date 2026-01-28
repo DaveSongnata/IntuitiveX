@@ -82,6 +82,51 @@
         @select="showDetail"
       />
 
+      <!-- Pagination -->
+      <div v-if="showResults && totalPaginas > 1" class="pagination">
+        <button
+          class="page-btn"
+          :disabled="paginaAtual === 1"
+          @click="mudarPagina(1)"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/>
+          </svg>
+        </button>
+        <button
+          class="page-btn"
+          :disabled="paginaAtual === 1"
+          @click="mudarPagina(paginaAtual - 1)"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+        </button>
+
+        <span class="page-info">
+          Página <strong>{{ paginaAtual }}</strong> de <strong>{{ totalPaginas }}</strong>
+        </span>
+
+        <button
+          class="page-btn"
+          :disabled="paginaAtual === totalPaginas"
+          @click="mudarPagina(paginaAtual + 1)"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </button>
+        <button
+          class="page-btn"
+          :disabled="paginaAtual === totalPaginas"
+          @click="mudarPagina(totalPaginas)"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M13 17l5-5-5-5M6 17l5-5-5-5"/>
+          </svg>
+        </button>
+      </div>
+
       <!-- Detail Modal -->
       <DetailModal
         v-if="selectedItem"
@@ -125,7 +170,15 @@ export default {
       loading: false,
       showResults: false,
       error: null,
-      selectedItem: null
+      selectedItem: null,
+      // Paginação
+      paginaAtual: 1,
+      porPagina: 20,
+      totalPaginas: 1,
+      // Guarda última consulta para paginação
+      ultimaConsulta: '',
+      ultimoCampo: '',
+      modoAvancado: false
     };
   },
   mounted() {
@@ -143,15 +196,21 @@ export default {
       }
     },
 
-    async performSearch(query) {
+    async performSearch(query, pagina = 1) {
       this.loading = true;
       this.showResults = false;
       this.error = null;
+      this.ultimaConsulta = query;
+      this.modoAvancado = false;
 
       try {
-        const response = await axios.get(`/api/pesquisa?consulta=${encodeURIComponent(query)}`);
+        const response = await axios.get(
+          `/api/pesquisa?consulta=${encodeURIComponent(query)}&pagina=${pagina}&por_pagina=${this.porPagina}`
+        );
         this.results = response.data.resultados;
         this.resultCount = response.data.contagem;
+        this.paginaAtual = response.data.paginacao.pagina;
+        this.totalPaginas = response.data.paginacao.total_paginas;
         this.showResults = true;
       } catch (error) {
         console.error('Erro na pesquisa:', error);
@@ -161,23 +220,38 @@ export default {
       }
     },
 
-    async performAdvancedSearch(field, query) {
+    async performAdvancedSearch(field, query, pagina = 1) {
       this.loading = true;
       this.showResults = false;
       this.error = null;
+      this.ultimaConsulta = query;
+      this.ultimoCampo = field;
+      this.modoAvancado = true;
 
       try {
         const response = await axios.get(
-          `/api/pesquisa/avancada?campo=${encodeURIComponent(field)}&consulta=${encodeURIComponent(query)}`
+          `/api/pesquisa/avancada?campo=${encodeURIComponent(field)}&consulta=${encodeURIComponent(query)}&pagina=${pagina}&por_pagina=${this.porPagina}`
         );
         this.results = response.data.resultados;
         this.resultCount = response.data.contagem;
+        this.paginaAtual = response.data.paginacao.pagina;
+        this.totalPaginas = response.data.paginacao.total_paginas;
         this.showResults = true;
       } catch (error) {
         console.error('Erro na pesquisa avançada:', error);
         this.error = error.response?.data?.erro || 'Erro ao realizar pesquisa avançada.';
       } finally {
         this.loading = false;
+      }
+    },
+
+    mudarPagina(novaPagina) {
+      if (novaPagina < 1 || novaPagina > this.totalPaginas) return;
+
+      if (this.modoAvancado) {
+        this.performAdvancedSearch(this.ultimoCampo, this.ultimaConsulta, novaPagina);
+      } else {
+        this.performSearch(this.ultimaConsulta, novaPagina);
       }
     },
 
@@ -484,6 +558,63 @@ body {
 
 .footer a:hover {
   text-decoration: underline;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 32px;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #E5E7EB;
+}
+
+.page-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 2px solid #E5E7EB;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.page-btn svg {
+  width: 18px;
+  height: 18px;
+  color: #6B7280;
+}
+
+.page-btn:hover:not(:disabled) {
+  border-color: #7C3AED;
+  background: #F5F3FF;
+}
+
+.page-btn:hover:not(:disabled) svg {
+  color: #7C3AED;
+}
+
+.page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.page-info {
+  font-size: 14px;
+  color: #6B7280;
+  padding: 0 16px;
+}
+
+.page-info strong {
+  color: #7C3AED;
+  font-weight: 600;
 }
 
 /* Responsive */
