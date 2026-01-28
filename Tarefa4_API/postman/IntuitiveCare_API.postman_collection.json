@@ -1,0 +1,266 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+		"name": "IntuitiveCare API - Busca de Operadoras ANS",
+		"description": "Coleção de requisições para testar a API de busca de operadoras de saúde da ANS.\n\n## Endpoints disponíveis\n\n- **Busca Simples**: Busca em todas as colunas\n- **Busca Avançada**: Busca em campo específico\n- **Listar Campos**: Lista campos disponíveis\n- **Health Check**: Verifica se o servidor está funcionando\n\n## Como usar\n\n1. Inicie o servidor backend: `python app.py`\n2. Importe esta coleção no Postman\n3. Execute as requisições",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/teste",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"teste"
+					]
+				},
+				"description": "Verifica se o servidor está funcionando corretamente.\n\nRetorna:\n```json\n{\n    \"status\": \"ok\",\n    \"mensagem\": \"Servidor funcionando!\"\n}\n```"
+			},
+			"response": []
+		},
+		{
+			"name": "Listar Campos Disponíveis",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/api/campos",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"campos"
+					]
+				},
+				"description": "Lista todos os campos disponíveis para busca no CSV.\n\nRetorna:\n```json\n{\n    \"campos\": [\"Registro_ANS\", \"CNPJ\", \"Razao_Social\", ...]\n}\n```"
+			},
+			"response": []
+		},
+		{
+			"name": "Busca Simples - Unimed",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/api/pesquisa?consulta=unimed",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"pesquisa"
+					],
+					"query": [
+						{
+							"key": "consulta",
+							"value": "unimed"
+						}
+					]
+				},
+				"description": "Busca por \"unimed\" em todas as colunas.\n\nRetorna:\n```json\n{\n    \"contagem\": 150,\n    \"resultados\": [...]\n}\n```"
+			},
+			"response": []
+		},
+		{
+			"name": "Busca Simples - Bradesco",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/api/pesquisa?consulta=bradesco",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"pesquisa"
+					],
+					"query": [
+						{
+							"key": "consulta",
+							"value": "bradesco"
+						}
+					]
+				},
+				"description": "Busca por \"bradesco\" em todas as colunas."
+			},
+			"response": []
+		},
+		{
+			"name": "Busca Simples - São Paulo",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/api/pesquisa?consulta=sao paulo",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"pesquisa"
+					],
+					"query": [
+						{
+							"key": "consulta",
+							"value": "sao paulo"
+						}
+					]
+				},
+				"description": "Busca por \"são paulo\" em todas as colunas."
+			},
+			"response": []
+		},
+		{
+			"name": "Busca Avançada - Razão Social",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/api/pesquisa/avancada?campo=Razao_Social&consulta=cooperativa",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"pesquisa",
+						"avancada"
+					],
+					"query": [
+						{
+							"key": "campo",
+							"value": "Razao_Social"
+						},
+						{
+							"key": "consulta",
+							"value": "cooperativa"
+						}
+					]
+				},
+				"description": "Busca por \"cooperativa\" apenas no campo Razao_Social.\n\nParâmetros:\n- campo: Nome da coluna\n- consulta: Termo de busca\n\nRetorna:\n```json\n{\n    \"contagem\": 50,\n    \"resultados\": [...]\n}\n```"
+			},
+			"response": []
+		},
+		{
+			"name": "Busca Avançada - Modalidade",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/api/pesquisa/avancada?campo=Modalidade&consulta=odontologia",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"pesquisa",
+						"avancada"
+					],
+					"query": [
+						{
+							"key": "campo",
+							"value": "Modalidade"
+						},
+						{
+							"key": "consulta",
+							"value": "odontologia"
+						}
+					]
+				},
+				"description": "Busca por \"odontologia\" apenas no campo Modalidade."
+			},
+			"response": []
+		},
+		{
+			"name": "Busca Avançada - UF (Estado)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/api/pesquisa/avancada?campo=UF&consulta=RJ",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"pesquisa",
+						"avancada"
+					],
+					"query": [
+						{
+							"key": "campo",
+							"value": "UF"
+						},
+						{
+							"key": "consulta",
+							"value": "RJ"
+						}
+					]
+				},
+				"description": "Busca operadoras do estado do Rio de Janeiro (RJ)."
+			},
+			"response": []
+		},
+		{
+			"name": "Busca Avançada - Cidade",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/api/pesquisa/avancada?campo=Cidade&consulta=curitiba",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"pesquisa",
+						"avancada"
+					],
+					"query": [
+						{
+							"key": "campo",
+							"value": "Cidade"
+						},
+						{
+							"key": "consulta",
+							"value": "curitiba"
+						}
+					]
+				},
+				"description": "Busca operadoras da cidade de Curitiba."
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8000"
+		}
+	]
+}
