@@ -36,6 +36,18 @@ app = Flask(__name__,
             template_folder='../frontend/dist')
 
 
+def limpar_valor(valor):
+    """
+    Converte valor para string, removendo .0 de floats inteiros.
+    Ex: 32.0 -> "32", "texto" -> "texto", NaN -> ""
+    """
+    if pd.isna(valor):
+        return ''
+    if isinstance(valor, float) and valor.is_integer():
+        return str(int(valor))
+    return str(valor)
+
+
 def carregar_csv():
     """
     Carrega o arquivo CSV com tratamento de encoding.
@@ -67,6 +79,10 @@ def carregar_csv():
 
         if df is None:
             raise Exception("Não foi possível carregar o CSV com nenhum encoding")
+
+        # Limpa valores numéricos (remove .0 de inteiros)
+        for col in df.columns:
+            df[col] = df[col].apply(limpar_valor)
 
         logger.debug(f"Colunas: {df.columns.tolist()}")
         logger.debug(f"Total de linhas: {len(df)}")
@@ -128,12 +144,8 @@ def pesquisar():
         if not consulta:
             return jsonify({'erro': 'O parâmetro de consulta é obrigatório'}), 400
 
-        # Carrega dados
+        # Carrega dados (já vem com valores limpos)
         df = carregar_csv()
-
-        # Converte colunas para string
-        for col in df.columns:
-            df[col] = df[col].astype(str)
 
         # Cria máscara de busca (case-insensitive)
         mascara = pd.Series(False, index=df.index)
@@ -177,12 +189,8 @@ def pesquisa_avancada():
         if not consulta or not campo:
             return jsonify({'erro': 'Os parâmetros campo e consulta são obrigatórios'}), 400
 
-        # Carrega dados
+        # Carrega dados (já vem com valores limpos)
         df = carregar_csv()
-
-        # Converte colunas para string
-        for col in df.columns:
-            df[col] = df[col].astype(str)
 
         # Verifica se o campo existe
         if campo not in df.columns:

@@ -1,46 +1,104 @@
 <template>
-  <div class="container">
-    <h1>Pesquisa de Operadoras ANS</h1>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <div class="logo">
+          <span class="logo-text">Intuitive</span>
+          <span class="logo-accent">Care</span>
+        </div>
+        <nav class="nav">
+          <a href="#" class="nav-link active">Pesquisa</a>
+          <div class="nav-dropdown">
+            <span class="nav-link nav-dropdown-toggle">
+              Dados ANS
+              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+            </span>
+            <div class="dropdown-menu">
+              <a href="https://dadosabertos.ans.gov.br/FTP/PDA/operadoras_de_plano_de_saude_ativas/" target="_blank" class="dropdown-item">
+                Operadoras Ativas
+              </a>
+              <a href="https://dadosabertos.ans.gov.br/FTP/PDA/demonstracoes_contabeis/" target="_blank" class="dropdown-item">
+                Demonstrações Contábeis
+              </a>
+            </div>
+          </div>
+        </nav>
+      </div>
+    </header>
 
-    <SearchForm
-      @search="performSearch"
-      @advancedSearch="performAdvancedSearch"
-      :fields="fields"
-    />
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-content">
+        <h1>Pesquisa de Operadoras</h1>
+        <p class="hero-subtitle">
+          Consulte informações cadastrais de operadoras de planos de saúde
+          registradas na ANS de forma rápida e simples.
+        </p>
+      </div>
+    </section>
 
-    <div v-if="loading" class="loading">
-      <Spinner />
-      <p>Pesquisando...</p>
-    </div>
+    <!-- Main Content -->
+    <main class="main-content">
+      <SearchForm
+        @search="performSearch"
+        @advancedSearch="performAdvancedSearch"
+        :fields="fields"
+      />
 
-    <div v-if="error" class="alert alert-error">
-      {{ error }}
-    </div>
+      <!-- Loading State -->
+      <div v-if="loading" class="loading-container">
+        <Spinner />
+        <p>Pesquisando operadoras...</p>
+      </div>
 
-    <div v-if="showResults && resultCount > 0" class="alert alert-tip">
-      <TipIcon class="tip-icon" />
-      Dica: Clique nos resultados para ver mais detalhes.
-    </div>
+      <!-- Error Message -->
+      <div v-if="error" class="message message-error">
+        <span class="message-icon">!</span>
+        {{ error }}
+      </div>
 
-    <div v-if="showResults && resultCount > 0" class="alert alert-info">
-      Encontrados {{ resultCount }} resultados
-    </div>
+      <!-- Results Count -->
+      <div v-if="showResults && resultCount > 0" class="results-header">
+        <div class="results-count">
+          <span class="count-number">{{ resultCount }}</span>
+          <span class="count-label">{{ resultCount === 1 ? 'resultado encontrado' : 'resultados encontrados' }}</span>
+        </div>
+        <p class="results-tip">Clique em uma operadora para ver todos os detalhes</p>
+      </div>
 
-    <div v-if="showResults && resultCount === 0" class="alert alert-warning">
-      Nenhum resultado encontrado.
-    </div>
+      <!-- No Results -->
+      <div v-if="showResults && resultCount === 0" class="message message-warning">
+        <span class="message-icon">?</span>
+        Nenhuma operadora encontrada para esta pesquisa.
+      </div>
 
-    <SearchResults
-      :results="results"
-      :columnOrder="fields"
-      @select="showDetail"
-    />
+      <!-- Results -->
+      <SearchResults
+        :results="results"
+        :columnOrder="fields"
+        @select="showDetail"
+      />
 
-    <DetailModal
-      v-if="selectedItem"
-      :item="selectedItem"
-      @close="selectedItem = null"
-    />
+      <!-- Detail Modal -->
+      <DetailModal
+        v-if="selectedItem"
+        :item="selectedItem"
+        @close="selectedItem = null"
+      />
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>Dados obtidos da ANS - Agência Nacional de Saúde Suplementar</p>
+      <div class="footer-links">
+        <a href="https://dadosabertos.ans.gov.br/FTP/PDA/operadoras_de_plano_de_saude_ativas/" target="_blank">Operadoras Ativas</a>
+        <span class="footer-divider">|</span>
+        <a href="https://dadosabertos.ans.gov.br/FTP/PDA/demonstracoes_contabeis/" target="_blank">Demonstrações Contábeis</a>
+      </div>
+    </footer>
   </div>
 </template>
 
@@ -50,7 +108,6 @@ import SearchForm from './components/SearchForm.vue';
 import SearchResults from './components/SearchResults.vue';
 import DetailModal from './components/DetailModal.vue';
 import Spinner from './components/Spinner.vue';
-import TipIcon from './components/icons/TipIcon.vue';
 
 export default {
   name: 'App',
@@ -58,8 +115,7 @@ export default {
     SearchForm,
     SearchResults,
     DetailModal,
-    Spinner,
-    TipIcon
+    Spinner
   },
   data() {
     return {
@@ -83,7 +139,7 @@ export default {
         this.error = null;
       } catch (error) {
         console.error('Erro ao carregar campos:', error);
-        this.error = 'Erro ao carregar campos. Verifique se o servidor está rodando.';
+        this.error = 'Erro ao conectar com o servidor. Verifique se o backend está rodando.';
       }
     },
 
@@ -133,6 +189,7 @@ export default {
 </script>
 
 <style>
+/* Reset & Base */
 * {
   margin: 0;
   padding: 0;
@@ -140,72 +197,310 @@ export default {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-  background-color: #f5f5f5;
-  color: #333;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: #FAFAFA;
+  color: #1F2937;
   line-height: 1.6;
 }
 
-.container {
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.header {
+  background: white;
+  border-bottom: 1px solid #E5E7EB;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-h1 {
+.logo {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.logo-text {
+  color: #7C3AED;
+}
+
+.logo-accent {
+  color: #1F2937;
+}
+
+.nav {
+  display: flex;
+  gap: 32px;
+}
+
+.nav-link {
+  color: #6B7280;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+  transition: color 0.2s;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: #7C3AED;
+}
+
+/* Dropdown */
+.nav-dropdown {
+  position: relative;
+}
+
+.nav-dropdown-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.dropdown-icon {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s;
+}
+
+.nav-dropdown:hover .dropdown-icon {
+  transform: rotate(180deg);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  min-width: 200px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: all 0.2s;
+}
+
+.nav-dropdown:hover .dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dropdown-item {
+  display: block;
+  padding: 12px 16px;
+  color: #374151;
+  text-decoration: none;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.dropdown-item:first-child {
+  border-radius: 8px 8px 0 0;
+}
+
+.dropdown-item:last-child {
+  border-radius: 0 0 8px 8px;
+}
+
+.dropdown-item:hover {
+  background: #F5F3FF;
+  color: #7C3AED;
+}
+
+/* Hero Section */
+.hero {
+  background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%);
+  padding: 48px 24px;
+}
+
+.hero-content {
+  max-width: 800px;
+  margin: 0 auto;
   text-align: center;
-  color: #2c3e50;
-  margin-bottom: 30px;
-  font-size: 2rem;
+  color: white;
 }
 
-.loading {
+.hero h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.hero-subtitle {
+  font-size: 1.125rem;
+  opacity: 0.9;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Main Content */
+.main-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  flex: 1;
+  width: 100%;
+}
+
+/* Loading */
+.loading-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 2rem 0;
+  padding: 48px;
+  color: #6B7280;
 }
 
-.loading p {
-  margin-top: 10px;
-  color: #666;
+.loading-container p {
+  margin-top: 16px;
+  font-size: 14px;
 }
 
-.alert {
-  padding: 12px 20px;
-  border-radius: 8px;
-  margin-bottom: 15px;
+/* Messages */
+.message {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  font-size: 14px;
 }
 
-.alert-error {
-  background-color: #fee2e2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
+.message-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
 }
 
-.alert-info {
-  background-color: #dbeafe;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
+.message-error {
+  background: #FEF2F2;
+  color: #DC2626;
+  border: 1px solid #FECACA;
 }
 
-.alert-warning {
-  background-color: #fef3c7;
-  color: #d97706;
-  border: 1px solid #fde68a;
+.message-error .message-icon {
+  background: #DC2626;
+  color: white;
 }
 
-.alert-tip {
-  background-color: #f0fdf4;
-  color: #16a34a;
-  border: 1px solid #bbf7d0;
+.message-warning {
+  background: #FFFBEB;
+  color: #D97706;
+  border: 1px solid #FDE68A;
 }
 
-.tip-icon {
-  width: 20px;
-  height: 20px;
+.message-warning .message-icon {
+  background: #D97706;
+  color: white;
+}
+
+/* Results Header */
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  background: #F5F3FF;
+  border-radius: 12px;
+  border: 1px solid #DDD6FE;
+}
+
+.results-count {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.count-number {
+  font-size: 28px;
+  font-weight: 700;
+  color: #7C3AED;
+}
+
+.count-label {
+  color: #6B7280;
+  font-size: 14px;
+}
+
+.results-tip {
+  color: #7C3AED;
+  font-size: 13px;
+}
+
+/* Footer */
+.footer {
+  background: #1F2937;
+  color: #9CA3AF;
+  padding: 24px;
+  text-align: center;
+  font-size: 14px;
+  margin-top: auto;
+}
+
+.footer p {
+  margin-bottom: 8px;
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+.footer-divider {
+  color: #4B5563;
+}
+
+.footer a {
+  color: #A78BFA;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .hero h1 {
+    font-size: 1.75rem;
+  }
+
+  .results-header {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
 }
 </style>

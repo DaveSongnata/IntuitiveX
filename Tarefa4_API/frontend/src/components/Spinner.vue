@@ -13,7 +13,7 @@ export default {
   width: 40px;
   height: 40px;
   border: 4px solid #e5e7eb;
-  border-top-color: #3b82f6;
+  border-top-color: #7C3AED;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
