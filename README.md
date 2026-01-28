@@ -54,12 +54,15 @@ Scripts SQL para criar e popular um banco de dados PostgreSQL com dados das oper
 cd Tarefa3_BancoDados
 
 # 1. Baixe os dados manualmente (ver README da tarefa)
-# 2. Execute os scripts SQL na ordem:
-psql -d seu_banco -f scripts/01_create_tables_operadoras.sql
-psql -d seu_banco -f scripts/02_import_operadoras.sql
-psql -d seu_banco -f scripts/03_create_tables_contabeis.sql
-psql -d seu_banco -f scripts/04_import_contabeis.sql
-psql -d seu_banco -f scripts/05_queries_analiticas.sql
+# 2. Crie o banco de dados:
+psql -U postgres -c "CREATE DATABASE ans_teste;"
+
+# 3. Execute os scripts SQL na ordem:
+psql -U postgres -d ans_teste -f scripts/01_create_tables_operadoras.sql
+psql -U postgres -d ans_teste -f scripts/02_import_operadoras.sql
+psql -U postgres -d ans_teste -f scripts/03_create_tables_contabeis.sql
+psql -U postgres -d ans_teste -f scripts/04_import_contabeis.sql
+psql -U postgres -d ans_teste -f scripts/05_queries_analiticas.sql
 ```
 
 **Saída:** Queries analíticas com top 10 operadoras

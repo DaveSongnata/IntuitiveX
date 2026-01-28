@@ -58,15 +58,15 @@ Execute os scripts **na ordem**:
 ### Via psql (linha de comando):
 
 ```bash
-# Conecta ao banco
-psql -U postgres -d nome_do_banco
+# Cria o banco de dados
+psql -U postgres -c "CREATE DATABASE ans_teste;"
 
 # Executa os scripts na ordem
-\i scripts/01_create_tables_operadoras.sql
-\i scripts/02_import_operadoras.sql
-\i scripts/03_create_tables_contabeis.sql
-\i scripts/04_import_contabeis.sql
-\i scripts/05_queries_analiticas.sql
+psql -U postgres -d ans_teste -f scripts/01_create_tables_operadoras.sql
+psql -U postgres -d ans_teste -f scripts/02_import_operadoras.sql
+psql -U postgres -d ans_teste -f scripts/03_create_tables_contabeis.sql
+psql -U postgres -d ans_teste -f scripts/04_import_contabeis.sql
+psql -U postgres -d ans_teste -f scripts/05_queries_analiticas.sql
 ```
 
 ### Via pgAdmin:
