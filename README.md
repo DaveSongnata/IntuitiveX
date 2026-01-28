@@ -73,6 +73,8 @@ psql -U postgres -d ans_teste -f scripts/05_queries_analiticas.sql
 
 Interface web Vue.js com servidor Python Flask para busca de operadoras.
 
+Obs: essa task está disponível de forma online em https://intuitivex-api.onrender.com/ e em https://ans.treent.com.br/
+
 ```bash
 # Backend
 cd Tarefa4_API/backend
