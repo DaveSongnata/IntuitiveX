@@ -7,8 +7,8 @@ Uso:
     python app.py
 
 Endpoints:
-    GET /api/pesquisa?consulta={termo}
-    GET /api/pesquisa/avancada?campo={coluna}&consulta={termo}
+    GET /api/pesquisa?consulta={termo}&pagina=1&por_pagina=20
+    GET /api/pesquisa/avancada?campo={coluna}&consulta={termo}&pagina=1&por_pagina=20
     GET /api/campos
     GET /teste
 
@@ -35,6 +35,12 @@ app = Flask(__name__,
             static_folder='../frontend/dist',
             template_folder='../frontend/dist')
 
+# =============================================================================
+# Cache do DataFrame (Performance)
+# =============================================================================
+
+_df_cache = None
+
 
 def limpar_valor(valor):
     """
@@ -51,12 +57,20 @@ def limpar_valor(valor):
 def carregar_csv():
     """
     Carrega o arquivo CSV com tratamento de encoding.
+    Usa cache para evitar recarregar a cada request.
 
     Returns:
         DataFrame com os dados das operadoras
     """
+    global _df_cache
+
+    # Retorna cache se já carregado
+    if _df_cache is not None:
+        logger.debug("Usando DataFrame do cache")
+        return _df_cache
+
     try:
-        logger.debug("Carregando arquivo CSV...")
+        logger.info("Carregando arquivo CSV (primeira vez)...")
 
         # Tenta diferentes encodings
         encodings = ['utf-8', 'latin1', 'iso-8859-1', 'cp1252']
@@ -71,7 +85,7 @@ def carregar_csv():
                     delimiter=';',
                     quotechar='"'
                 )
-                logger.debug(f"CSV carregado com encoding {encoding}")
+                logger.info(f"CSV carregado com encoding {encoding}")
                 break
             except UnicodeDecodeError:
                 logger.debug(f"Falha com encoding {encoding}")
@@ -84,14 +98,48 @@ def carregar_csv():
         for col in df.columns:
             df[col] = df[col].apply(limpar_valor)
 
-        logger.debug(f"Colunas: {df.columns.tolist()}")
-        logger.debug(f"Total de linhas: {len(df)}")
+        logger.info(f"Colunas: {df.columns.tolist()}")
+        logger.info(f"Total de linhas: {len(df)}")
 
+        # Armazena no cache
+        _df_cache = df
         return df
 
     except Exception as e:
         logger.error(f"Erro ao carregar CSV: {str(e)}")
         raise
+
+
+def paginar(resultados, pagina, por_pagina):
+    """
+    Aplica paginação a uma lista de resultados.
+
+    Args:
+        resultados: Lista de dicionários
+        pagina: Número da página (1-indexed)
+        por_pagina: Quantidade por página
+
+    Returns:
+        Dict com resultados paginados e metadados
+    """
+    total = len(resultados)
+    total_paginas = (total + por_pagina - 1) // por_pagina if por_pagina > 0 else 1
+
+    # Garante que página está no range válido
+    pagina = max(1, min(pagina, total_paginas)) if total_paginas > 0 else 1
+
+    inicio = (pagina - 1) * por_pagina
+    fim = inicio + por_pagina
+
+    return {
+        'resultados': resultados[inicio:fim],
+        'paginacao': {
+            'pagina': pagina,
+            'por_pagina': por_pagina,
+            'total': total,
+            'total_paginas': total_paginas
+        }
+    }
 
 
 # =============================================================================
@@ -129,22 +177,27 @@ def serve_css(path):
 @app.route('/api/pesquisa', methods=['GET'])
 def pesquisar():
     """
-    Busca simples em todas as colunas.
+    Busca simples em todas as colunas com paginação.
 
     Query params:
-        consulta: Termo de busca
+        consulta: Termo de busca (obrigatório)
+        pagina: Número da página (default: 1)
+        por_pagina: Resultados por página (default: 20, max: 100)
 
     Returns:
-        JSON com contagem e resultados
+        JSON com contagem, paginação e resultados
     """
     try:
         consulta = request.args.get('consulta', '')
-        logger.debug(f"Busca simples: {consulta}")
+        pagina = request.args.get('pagina', 1, type=int)
+        por_pagina = min(request.args.get('por_pagina', 20, type=int), 100)
+
+        logger.debug(f"Busca simples: {consulta} (página {pagina})")
 
         if not consulta:
             return jsonify({'erro': 'O parâmetro de consulta é obrigatório'}), 400
 
-        # Carrega dados (já vem com valores limpos)
+        # Carrega dados do cache
         df = carregar_csv()
 
         # Cria máscara de busca (case-insensitive)
@@ -156,12 +209,16 @@ def pesquisar():
             )
 
         # Filtra e converte para dict
-        resultado = df[mascara].to_dict(orient='records')
-        logger.debug(f"Encontrados {len(resultado)} resultados")
+        todos_resultados = df[mascara].to_dict(orient='records')
+        logger.debug(f"Encontrados {len(todos_resultados)} resultados")
+
+        # Aplica paginação
+        dados_paginados = paginar(todos_resultados, pagina, por_pagina)
 
         return jsonify({
-            'contagem': len(resultado),
-            'resultados': resultado
+            'contagem': dados_paginados['paginacao']['total'],
+            'paginacao': dados_paginados['paginacao'],
+            'resultados': dados_paginados['resultados']
         })
 
     except Exception as e:
@@ -172,24 +229,29 @@ def pesquisar():
 @app.route('/api/pesquisa/avancada', methods=['GET'])
 def pesquisa_avancada():
     """
-    Busca em um campo específico.
+    Busca em um campo específico com paginação.
 
     Query params:
-        campo: Nome da coluna
-        consulta: Termo de busca
+        campo: Nome da coluna (obrigatório)
+        consulta: Termo de busca (obrigatório)
+        pagina: Número da página (default: 1)
+        por_pagina: Resultados por página (default: 20, max: 100)
 
     Returns:
-        JSON com contagem e resultados
+        JSON com contagem, paginação e resultados
     """
     try:
         campo = request.args.get('campo', '')
         consulta = request.args.get('consulta', '')
-        logger.debug(f"Busca avançada - Campo: {campo}, Consulta: {consulta}")
+        pagina = request.args.get('pagina', 1, type=int)
+        por_pagina = min(request.args.get('por_pagina', 20, type=int), 100)
+
+        logger.debug(f"Busca avançada - Campo: {campo}, Consulta: {consulta} (página {pagina})")
 
         if not consulta or not campo:
             return jsonify({'erro': 'Os parâmetros campo e consulta são obrigatórios'}), 400
 
-        # Carrega dados (já vem com valores limpos)
+        # Carrega dados do cache
         df = carregar_csv()
 
         # Verifica se o campo existe
@@ -201,12 +263,16 @@ def pesquisa_avancada():
         mascara = df[campo].str.contains(
             consulta, case=False, regex=False, na=False
         )
-        resultado = df[mascara].to_dict(orient='records')
-        logger.debug(f"Encontrados {len(resultado)} resultados")
+        todos_resultados = df[mascara].to_dict(orient='records')
+        logger.debug(f"Encontrados {len(todos_resultados)} resultados")
+
+        # Aplica paginação
+        dados_paginados = paginar(todos_resultados, pagina, por_pagina)
 
         return jsonify({
-            'contagem': len(resultado),
-            'resultados': resultado
+            'contagem': dados_paginados['paginacao']['total'],
+            'paginacao': dados_paginados['paginacao'],
+            'resultados': dados_paginados['resultados']
         })
 
     except Exception as e:
@@ -256,10 +322,15 @@ if __name__ == '__main__':
     print("\nIniciando servidor Flask...")
     print("Acesse: http://localhost:8000")
     print("\nEndpoints disponíveis:")
-    print("  GET /api/pesquisa?consulta={termo}")
+    print("  GET /api/pesquisa?consulta={termo}&pagina=1&por_pagina=20")
     print("  GET /api/pesquisa/avancada?campo={coluna}&consulta={termo}")
     print("  GET /api/campos")
     print("  GET /teste")
     print("=" * 50)
+
+    # Pré-carrega o CSV no startup
+    print("\nCarregando dados...")
+    carregar_csv()
+    print("Dados carregados com sucesso!\n")
 
     app.run(host='0.0.0.0', port=8000, debug=True)
